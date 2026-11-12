@@ -174,3 +174,37 @@ if (updateClock()) {
 const initial = indexFromUrl();
 if (initial >= 0) finishOpening(initial);
 else resetOpening();
+
+
+// YouTube requires a visible embedded player; start only after a guest taps play.
+// The dock sits outside the scene stage so changing pages does not stop the song.
+const musicToggle = document.querySelector('#music-toggle');
+const musicPanel = document.querySelector('#music-player');
+const musicEmbed = document.querySelector('#music-embed');
+const musicStop = document.querySelector('#music-stop');
+musicToggle.addEventListener('click', () => {
+  if (!musicPanel.hidden) {
+    musicPanel.hidden = true;
+    musicEmbed.replaceChildren();
+    musicToggle.setAttribute('aria-expanded', 'false');
+    musicToggle.textContent = '♫ Play wedding song';
+    return;
+  }
+  const player = document.createElement('iframe');
+  player.title = 'Wedding song on YouTube';
+  player.src = 'https://www.youtube-nocookie.com/embed/-GZ-eEozdIg?autoplay=1&playsinline=1&rel=0';
+  player.allow = 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share';
+  player.referrerPolicy = 'strict-origin-when-cross-origin';
+  player.allowFullscreen = true;
+  musicEmbed.append(player);
+  musicPanel.hidden = false;
+  musicToggle.setAttribute('aria-expanded', 'true');
+  musicToggle.textContent = '♫ Hide / stop music';
+});
+musicStop.addEventListener('click', () => {
+  musicPanel.hidden = true;
+  musicEmbed.replaceChildren();
+  musicToggle.setAttribute('aria-expanded', 'false');
+  musicToggle.textContent = '♫ Play wedding song';
+  musicToggle.focus();
+});
