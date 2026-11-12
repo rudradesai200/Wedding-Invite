@@ -177,24 +177,35 @@ else resetOpening();
 
 
 
-// Attempt background playback with no separate play button.
-// Browsers may prevent audible autoplay until the guest interacts with the page.
+// Use a locally hosted MP3 for reliable mobile playback once uploaded to assets/.
+// The invitation opening is a user gesture, which browsers generally permit for audio.
 const backgroundMusic = document.querySelector('#background-music');
-let musicStarted = false;
-function startBackgroundMusic() {
-  if (musicStarted) return;
-  musicStarted = true;
+const weddingAudio = document.createElement('audio');
+weddingAudio.src = 'assets/wedding-song.mp3';
+weddingAudio.preload = 'auto';
+weddingAudio.loop = true;
+weddingAudio.setAttribute('aria-hidden', 'true');
+backgroundMusic.append(weddingAudio);
+let fallbackStarted = false;
+function startYouTubeFallback() {
+  if (fallbackStarted || !backgroundMusic) return;
+  fallbackStarted = true;
   const player = document.createElement('iframe');
-  player.title = 'Wedding background song';
+  player.title = 'Wedding background song (YouTube fallback)';
   player.src = 'https://www.youtube-nocookie.com/embed/-GZ-eEozdIg?autoplay=1&loop=1&playlist=-GZ-eEozdIg&playsinline=1&controls=0';
   player.allow = 'autoplay; encrypted-media';
   player.referrerPolicy = 'strict-origin-when-cross-origin';
   player.tabIndex = -1;
   backgroundMusic.append(player);
 }
-// Starting in the invitation-opening click improves the chance of sound on phones.
+function startBackgroundMusic() {
+  if (!weddingAudio.paused || fallbackStarted) return;
+  const attempt = weddingAudio.play();
+  if (attempt && typeof attempt.catch === 'function') {
+    attempt.catch(() => startYouTubeFallback());
+  }
+}
 document.querySelector('#reveal').addEventListener('click', startBackgroundMusic);
-// Deep links skip the opening, so also make a best-effort autoplay attempt on load.
 if (opening.hidden) startBackgroundMusic();
 window.addEventListener('pageshow', () => {
   if (opening.hidden) startBackgroundMusic();
