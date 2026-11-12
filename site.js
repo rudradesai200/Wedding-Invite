@@ -9,6 +9,8 @@ const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 let current = 0;
 let openingTimer;
 let sceneAnimation;
+let transitionTimer;
+let leavingScene;
 const sceneMotion = {
   welcome: ['scale(1.045)', 720],
   invitation: ['perspective(900px) rotateY(-14deg) translateX(-22px)', 720],
@@ -31,8 +33,26 @@ const dots = scenes.map((scene, index) => {
 function render(index, focus = true) {
   if (index < 0 || index >= scenes.length) return;
   const backward = index < current;
+  const outgoing = scenes[current];
+  const changed = current !== index;
+  clearTimeout(transitionTimer);
+  leavingScene?.remove();
+  leavingScene = null;
+  if (focus && changed && !reduceMotion.matches) {
+    leavingScene = outgoing.cloneNode(true);
+    leavingScene.removeAttribute('id');
+    leavingScene.querySelectorAll('[id]').forEach(node => node.removeAttribute('id'));
+    leavingScene.setAttribute('aria-hidden', 'true');
+    leavingScene.inert = true;
+    leavingScene.classList.add('scene-leaving');
+    leavingScene.hidden = false;
+    leavingScene.style.setProperty('--exit-direction', backward ? '1' : '-1');
+    stage.append(leavingScene);
+    transitionTimer = setTimeout(() => { leavingScene?.remove(); leavingScene = null; }, 900);
+  }
   current = index;
   scenes.forEach((scene, i) => { scene.hidden = index !== i; });
+  journey.dataset.scene = scenes[index].id;
   dots.forEach((dot, i) => {
     if (i === index) dot.setAttribute('aria-current', 'step');
     else dot.removeAttribute('aria-current');
@@ -48,11 +68,17 @@ function render(index, focus = true) {
   const content = scene.querySelector('.scene-content');
   if (reduceMotion.matches || !content.animate) return;
   const [entrance, duration] = sceneMotion[scene.id];
-  sceneAnimation = content.animate(
-    [{opacity: 0, transform: backward ? 'translateX(-32px)' : entrance},
+  sceneAnimation = scene.animate(
+    [{opacity: 0, transform: backward ? 'translateX(-12%) scale(.98)' : 'translateX(12%) scale(.98)'},
      {opacity: 1, transform: 'none'}],
-    {duration, easing: 'cubic-bezier(.2,.75,.3,1)'}
+    {duration: 900, easing: 'cubic-bezier(.22,.68,.25,1)'}
   );
+  [...content.children].forEach((part, order) => {
+    part.animate(
+      [{opacity: 0, transform: entrance}, {opacity: 1, transform: 'none'}],
+      {duration, delay: 150 + Math.min(order, 5) * 65, fill: 'backwards', easing: 'cubic-bezier(.2,.75,.3,1)'}
+    );
+  });
 }
 
 function navigate(index) {
