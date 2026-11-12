@@ -8,6 +8,15 @@ const forward = document.querySelector('#forward');
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 let current = 0;
 let openingTimer;
+let sceneAnimation;
+const sceneMotion = {
+  welcome: ['scale(1.045)', 720],
+  invitation: ['perspective(900px) rotateY(-14deg) translateX(-22px)', 720],
+  celebrations: ['translateY(28px)', 640],
+  wedding: ['translateY(12px) scale(.94)', 780],
+  travel: ['translateX(34px)', 670],
+  rsvp: ['scale(.96) translateY(17px)', 700],
+};
 const dots = scenes.map((scene, index) => {
   const button = document.createElement('button');
   const name = scene.querySelector('h1, h2').textContent.trim();
@@ -21,7 +30,7 @@ const dots = scenes.map((scene, index) => {
 
 function render(index, focus = true) {
   if (index < 0 || index >= scenes.length) return;
-  stage.dataset.direction = index < current ? 'back' : 'forward';
+  const backward = index < current;
   current = index;
   scenes.forEach((scene, i) => { scene.hidden = index !== i; });
   dots.forEach((dot, i) => {
@@ -32,7 +41,18 @@ function render(index, focus = true) {
   forward.disabled = index === scenes.length - 1;
   document.querySelector('#scene-status').textContent = (index + 1) + ' / ' + scenes.length;
   stage.scrollTop = 0;
-  if (focus) scenes[index].querySelector('h1, h2').focus({preventScroll: true});
+  sceneAnimation?.cancel();
+  if (!focus) return;
+  const scene = scenes[index];
+  scene.querySelector('h1, h2').focus({preventScroll: true});
+  const content = scene.querySelector('.scene-content');
+  if (reduceMotion.matches || !content.animate) return;
+  const [entrance, duration] = sceneMotion[scene.id];
+  sceneAnimation = content.animate(
+    [{opacity: 0, transform: backward ? 'translateX(-32px)' : entrance},
+     {opacity: 1, transform: 'none'}],
+    {duration, easing: 'cubic-bezier(.2,.75,.3,1)'}
+  );
 }
 
 function navigate(index) {
