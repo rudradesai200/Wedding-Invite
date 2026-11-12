@@ -276,3 +276,15 @@ html,body{width:100%;min-width:0}
 @media(prefers-reduced-motion:reduce){
   .scene-next span,.journey-nav #forward:not(:disabled){animation:none}
 }
+
+/* Persistent, user-controlled YouTube music player across invitation pages. */
+.music-dock{position:fixed;z-index:12;right:max(10px,env(safe-area-inset-right));bottom:calc(65px + env(safe-area-inset-bottom));display:grid;justify-items:end;gap:8px;max-width:calc(100vw - 20px)}
+.music-toggle{border:1px solid #e9c88e;border-radius:999px;padding:10px 15px;min-height:44px;background:#3c282e;color:#fff1d7;font-weight:700;box-shadow:0 4px 20px #0006}
+.music-toggle:focus-visible,.music-heading button:focus-visible{outline:3px solid #e9c88e;outline-offset:3px}
+.music-player{width:min(300px,calc(100vw - 20px));padding:9px;background:#fff8eb;color:#392b2a;border:1px solid #b99a72;box-shadow:0 12px 35px #0007;border-radius:12px}
+.music-heading{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:13px;margin-bottom:8px}
+.music-heading button{width:34px;height:34px;border:1px solid #b99a72;border-radius:7px;background:#fff;color:#3c282e}
+#music-embed iframe{display:block;width:100%;height:205px;border:0;border-radius:6px}
+.music-player p{font-size:11px;margin-top:6px;line-height:1.35}
+@media(max-width:700px){.music-dock{bottom:calc(64px + env(safe-area-inset-bottom))}}
+@media(max-height:480px){.music-dock{bottom:8px}.music-player{width:225px}#music-embed iframe{height:200px}}
